@@ -1,0 +1,6 @@
+{
+  "name": "SIMON PJJ - SDN 32 Rantau Bayur",
+  "description": "Sistem Informasi Monitoring PJJ (Pembelajaran Jarak Jauh) SDN 32 Rantau Bayur. NPSN: 10602612, T.A 2026/2027. Kepala Sekolah: Anita Muchtar, S.Pd.,MM.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
