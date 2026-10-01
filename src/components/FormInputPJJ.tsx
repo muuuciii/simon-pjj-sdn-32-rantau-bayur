@@ -103,8 +103,36 @@ export const FormInputPJJ: React.FC<FormInputPJJProps> = ({
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setFotoBukti(reader.result as string);
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const maxDim = 800;
+          let width = img.width;
+          let height = img.height;
+          if (width > height) {
+            if (width > maxDim) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            }
+          } else {
+            if (height > maxDim) {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+          }
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, width, height);
+            const compressed = canvas.toDataURL('image/jpeg', 0.75);
+            setFotoBukti(compressed);
+          } else {
+            setFotoBukti(reader.result as string);
+          }
+        };
+        img.src = event.target?.result as string;
       };
       reader.readAsDataURL(file);
     }
@@ -115,6 +143,9 @@ export const FormInputPJJ: React.FC<FormInputPJJProps> = ({
 
     const selectedGuru =
       daftarGuru.find((g) => g.id === selectedGuruId) || daftarGuru[0];
+    const guruId = selectedGuru ? selectedGuru.id : `guru-${Date.now()}`;
+    const guruNama = selectedGuru ? selectedGuru.nama : 'Guru SDN 32 Rantau Bayur';
+    const nip = selectedGuru ? selectedGuru.nip : '-';
 
     const nowFormatted = new Intl.DateTimeFormat('id-ID', {
       day: 'numeric',
@@ -126,9 +157,9 @@ export const FormInputPJJ: React.FC<FormInputPJJProps> = ({
 
     const newReport: LaporanPJJ = {
       id: `pjj-${Date.now()}`,
-      guruId: selectedGuru.id,
-      guruNama: selectedGuru.nama,
-      nip: selectedGuru.nip,
+      guruId,
+      guruNama,
+      nip,
       tanggal,
       jamMulai,
       jamSelesai,
@@ -149,9 +180,11 @@ export const FormInputPJJ: React.FC<FormInputPJJProps> = ({
       kendalaPJJ:
         kendalaPJJ ||
         'Sebagian siswa lambat merespon karena kendala jaringan atau gawai bergantian.',
-      fotoBuktiUrl: fotoBukti || undefined,
+      fotoBuktiUrl: fotoBukti || '',
       waktuKirim: `${nowFormatted} WIB`,
       statusPemeriksaan: 'Menunggu Diperiksa',
+      catatanKepsek: '',
+      diperiksaOleh: '',
     };
 
     onSubmitLaporan(newReport);

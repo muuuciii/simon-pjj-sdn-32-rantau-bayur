@@ -38,13 +38,24 @@ export function subscribeToLaporan(
   );
 }
 
+function cleanPayload<T extends Record<string, any>>(obj: T): Record<string, any> {
+  const clean: Record<string, any> = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (value !== undefined) {
+      clean[key] = value;
+    }
+  }
+  return clean;
+}
+
 /**
  * Menyimpan laporan PJJ baru ke Cloud Database
  */
 export async function saveLaporanOnline(laporan: LaporanPJJ): Promise<void> {
   const docRef = doc(db, LAPORAN_COLLECTION, laporan.id);
   try {
-    await setDoc(docRef, laporan);
+    const dataToSave = cleanPayload(laporan);
+    await setDoc(docRef, dataToSave);
   } catch (error) {
     handleFirestoreError(error, OperationType.WRITE, `${LAPORAN_COLLECTION}/${laporan.id}`);
     throw error;
@@ -117,7 +128,8 @@ export function subscribeToGuru(
 export async function saveGuruOnline(guru: GuruPJJ): Promise<void> {
   const docRef = doc(db, GURU_COLLECTION, guru.id);
   try {
-    await setDoc(docRef, guru);
+    const dataToSave = cleanPayload(guru);
+    await setDoc(docRef, dataToSave);
   } catch (error) {
     handleFirestoreError(error, OperationType.WRITE, `${GURU_COLLECTION}/${guru.id}`);
     throw error;

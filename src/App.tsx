@@ -82,7 +82,23 @@ export default function App() {
 
     // Subscribe to real-time reports
     const unsubLaporan = subscribeToLaporan(
-      (cloudLaporan) => {
+      async (cloudLaporan) => {
+        // Cek jika cloud masih kosong tapi ada laporan lokal lama yang belum terunggah
+        const localSaved = localStorage.getItem('simon_pjj_laporan_clean');
+        if (localSaved && cloudLaporan.length === 0) {
+          try {
+            const parsedLocal: LaporanPJJ[] = JSON.parse(localSaved);
+            if (parsedLocal.length > 0) {
+              for (const lap of parsedLocal) {
+                await saveLaporanOnline(lap);
+              }
+              return;
+            }
+          } catch (e) {
+            console.error('Gagal sinkron laporan lokal ke cloud:', e);
+          }
+        }
+
         setLaporanList(cloudLaporan);
         localStorage.setItem('simon_pjj_laporan_clean', JSON.stringify(cloudLaporan));
         setIsCloudSyncing(false);
@@ -96,7 +112,23 @@ export default function App() {
 
     // Subscribe to real-time teachers
     const unsubGuru = subscribeToGuru(
-      (cloudGuru) => {
+      async (cloudGuru) => {
+        // Cek jika cloud masih kosong tapi ada data guru lokal lama
+        const localSavedGuru = localStorage.getItem('simon_pjj_guru_v5');
+        if (localSavedGuru && cloudGuru.length === 0) {
+          try {
+            const parsedGuru: GuruPJJ[] = JSON.parse(localSavedGuru);
+            if (parsedGuru.length > 0) {
+              for (const g of parsedGuru) {
+                await saveGuruOnline(g);
+              }
+              return;
+            }
+          } catch (e) {
+            console.error('Gagal sinkron guru lokal ke cloud:', e);
+          }
+        }
+
         setDaftarGuru(cloudGuru);
         localStorage.setItem('simon_pjj_guru_v5', JSON.stringify(cloudGuru));
       },
