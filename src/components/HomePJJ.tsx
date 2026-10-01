@@ -24,6 +24,7 @@ interface HomePJJProps {
   laporanList: LaporanPJJ[];
   onNavigate: (view: 'input' | 'pantauan' | 'cetak') => void;
   onOpenTambahGuru: () => void;
+  onOpenUbahLogo?: () => void;
 }
 
 export const HomePJJ: React.FC<HomePJJProps> = ({
@@ -32,6 +33,7 @@ export const HomePJJ: React.FC<HomePJJProps> = ({
   laporanList,
   onNavigate,
   onOpenTambahGuru,
+  onOpenUbahLogo,
 }) => {
   const todayStr = new Date().toISOString().slice(0, 10);
   const todayFormatted = new Intl.DateTimeFormat('id-ID', {
@@ -80,13 +82,24 @@ export const HomePJJ: React.FC<HomePJJProps> = ({
 
           {/* Logo & Principal Lockup */}
           <div className="p-4 bg-white/10 backdrop-blur-md rounded-2xl border border-white/15 text-center flex flex-col items-center justify-center shrink-0 min-w-56 space-y-2">
-            <div className="h-20 w-20 rounded-2xl bg-white p-2 shadow-md flex items-center justify-center">
-              <img
-                src={profil.logoUrl}
-                alt="Logo SDN 32"
-                className="h-full w-full object-contain"
-                referrerPolicy="no-referrer"
-              />
+            <div className="relative group">
+              <div className="h-20 w-20 rounded-2xl bg-white p-2 shadow-md flex items-center justify-center">
+                <img
+                  src={profil.logoUrl}
+                  alt="Logo SDN 32"
+                  className="h-full w-full object-contain"
+                  referrerPolicy="no-referrer"
+                />
+              </div>
+              {onOpenUbahLogo && (
+                <button
+                  onClick={onOpenUbahLogo}
+                  className="mt-1.5 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-white/20 hover:bg-white/30 text-white text-[10px] font-semibold transition-colors"
+                >
+                  <Sparkles className="h-2.5 w-2.5" />
+                  <span>Ganti Logo</span>
+                </button>
+              )}
             </div>
             <div>
               <div className="text-[10px] text-blue-200 font-bold uppercase tracking-wider">

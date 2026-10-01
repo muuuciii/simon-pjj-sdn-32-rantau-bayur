@@ -17,6 +17,7 @@ interface HeaderPJJProps {
   onViewChange: (view: 'home' | 'input' | 'pantauan' | 'cetak') => void;
   laporanHariIniCount: number;
   totalGuruCount: number;
+  onOpenUbahLogo?: () => void;
 }
 
 export const HeaderPJJ: React.FC<HeaderPJJProps> = ({
@@ -25,6 +26,7 @@ export const HeaderPJJ: React.FC<HeaderPJJProps> = ({
   onViewChange,
   laporanHariIniCount,
   totalGuruCount,
+  onOpenUbahLogo,
 }) => {
   const todayFormatted = new Intl.DateTimeFormat('id-ID', {
     weekday: 'long',
@@ -39,15 +41,22 @@ export const HeaderPJJ: React.FC<HeaderPJJProps> = ({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-4">
         {/* Zone 1: Wordmark & School Branding */}
         <div className="flex items-center gap-3 min-w-0">
-          {/* Logo Sekolah Terkunci (Locked) */}
-          <div className="h-11 w-11 rounded-xl overflow-hidden border border-slate-200 shadow-2xs flex items-center justify-center bg-slate-50 shrink-0">
+          {/* Logo Sekolah dengan Tombol Ganti */}
+          <button
+            onClick={onOpenUbahLogo}
+            title="Klik untuk mengganti logo sekolah"
+            className="group relative h-11 w-11 rounded-xl overflow-hidden border border-slate-200 shadow-2xs flex items-center justify-center bg-slate-50 shrink-0 hover:ring-2 hover:ring-blue-500 transition-all cursor-pointer"
+          >
             <img
               src={profil.logoUrl}
               alt="Logo SDN 32"
               className="h-full w-full object-contain"
               referrerPolicy="no-referrer"
             />
-          </div>
+            <div className="absolute inset-0 bg-blue-900/60 text-white opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-[9px] font-bold">
+              Ubah
+            </div>
+          </button>
 
           <div className="min-w-0">
             <div className="flex items-center gap-2">

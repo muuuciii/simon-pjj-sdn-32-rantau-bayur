@@ -10,6 +10,7 @@ import { FormInputPJJ } from './components/FormInputPJJ';
 import { PantauanKepsekPJJ } from './components/PantauanKepsekPJJ';
 import { CetakLaporanPJJ } from './components/CetakLaporanPJJ';
 import { ModalKelolaGuru } from './components/ModalKelolaGuru';
+import { ModalUbahLogo } from './components/ModalUbahLogo';
 
 import {
   PROFIL_SEKOLAH,
@@ -23,14 +24,11 @@ export default function App() {
   // State for School Profile (including editable logo)
   const [profil, setProfil] = useState<ProfilSekolah>(() => {
     try {
-      const saved = localStorage.getItem('simon_pjj_profil');
-      if (saved) {
-        const parsed = JSON.parse(saved);
+      const customLogo = localStorage.getItem('simon_pjj_custom_logo');
+      if (customLogo) {
         return {
           ...PROFIL_SEKOLAH,
-          logoUrl: parsed.logoUrl || PROFIL_SEKOLAH.logoUrl,
-          nipKepalaSekolah: PROFIL_SEKOLAH.nipKepalaSekolah,
-          alamat: PROFIL_SEKOLAH.alamat,
+          logoUrl: customLogo,
         };
       }
       return PROFIL_SEKOLAH;
@@ -63,12 +61,9 @@ export default function App() {
   const [activeView, setActiveView] = useState<'home' | 'input' | 'pantauan' | 'cetak'>('home');
   const [singleLaporanForPrint, setSingleLaporanForPrint] = useState<LaporanPJJ | null>(null);
   const [isTambahGuruOpen, setIsTambahGuruOpen] = useState<boolean>(false);
+  const [isUbahLogoOpen, setIsUbahLogoOpen] = useState<boolean>(false);
 
   // Sync to LocalStorage
-  useEffect(() => {
-    localStorage.setItem('simon_pjj_profil', JSON.stringify(profil));
-  }, [profil]);
-
   useEffect(() => {
     localStorage.setItem('simon_pjj_guru_v5', JSON.stringify(daftarGuru));
   }, [daftarGuru]);
@@ -78,6 +73,15 @@ export default function App() {
   }, [laporanList]);
 
   // Handlers
+  const handleUpdateLogo = (newLogoUrl: string) => {
+    if (newLogoUrl === PROFIL_SEKOLAH.logoUrl) {
+      localStorage.removeItem('simon_pjj_custom_logo');
+    } else {
+      localStorage.setItem('simon_pjj_custom_logo', newLogoUrl);
+    }
+    setProfil((prev) => ({ ...prev, logoUrl: newLogoUrl }));
+  };
+
   const handleAddNewLaporan = (newLaporan: LaporanPJJ) => {
     setLaporanList((prev) => [newLaporan, ...prev]);
   };
@@ -140,6 +144,7 @@ export default function App() {
         }}
         laporanHariIniCount={uniqueTeachersReportedToday}
         totalGuruCount={daftarGuru.length}
+        onOpenUbahLogo={() => setIsUbahLogoOpen(true)}
       />
 
       {/* Main Content Area */}
@@ -151,6 +156,7 @@ export default function App() {
             laporanList={laporanList}
             onNavigate={(view) => setActiveView(view)}
             onOpenTambahGuru={() => setIsTambahGuruOpen(true)}
+            onOpenUbahLogo={() => setIsUbahLogoOpen(true)}
           />
         )}
 
@@ -250,6 +256,14 @@ export default function App() {
         onAddGuru={handleAddGuru}
         onDeleteGuru={handleDeleteGuru}
         onClearAllGuru={handleClearAllGuru}
+      />
+
+      {/* Modal Ubah Logo Sekolah */}
+      <ModalUbahLogo
+        isOpen={isUbahLogoOpen}
+        onClose={() => setIsUbahLogoOpen(false)}
+        currentLogoUrl={profil.logoUrl}
+        onUpdateLogo={handleUpdateLogo}
       />
 
       {/* Footer (no-print) */}
