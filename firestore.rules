@@ -1,0 +1,32 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Validasi data laporan PJJ
+    match /laporan_pjj/{laporanId} {
+      allow read: if true;
+      allow create, update: if request.resource.data.namaGuru is string 
+                            && request.resource.data.materi is string
+                            && request.resource.data.statusPemeriksaan in ['Belum Diperiksa', 'Disetujui', 'Perlu Perbaikan'];
+      allow delete: if true;
+    }
+
+    // Validasi data master dewan guru
+    match /guru_pjj/{guruId} {
+      allow read: if true;
+      allow create, update: if request.resource.data.nama is string;
+      allow delete: if true;
+    }
+
+    // Pengaturan profil sekolah
+    match /profil_sekolah/{docId} {
+      allow read: if true;
+      allow create, update: if request.resource.data.nama is string;
+    }
+
+    // Default deny untuk collection lain
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -18,9 +18,22 @@ import {
   INITIAL_LAPORAN_PJJ,
 } from './data/initialData';
 import { GuruPJJ, LaporanPJJ, ProfilSekolah } from './types';
-import { Home, FileText, ClipboardList, Printer } from 'lucide-react';
+import { Home, FileText, ClipboardList, Printer, Cloud, RefreshCw } from 'lucide-react';
+import {
+  subscribeToLaporan,
+  saveLaporanOnline,
+  updatePemeriksaanOnline,
+  deleteLaporanOnline,
+  subscribeToGuru,
+  saveGuruOnline,
+  deleteGuruOnline,
+} from './services/firestoreService';
+import { testConnection } from './lib/firebase';
 
 export default function App() {
+  const [isCloudSyncing, setIsCloudSyncing] = useState<boolean>(true);
+  const [cloudStatus, setCloudStatus] = useState<'connected' | 'offline'>('connected');
+
   // State for School Profile (including editable logo)
   const [profil, setProfil] = useState<ProfilSekolah>(() => {
     try {
@@ -63,7 +76,42 @@ export default function App() {
   const [isTambahGuruOpen, setIsTambahGuruOpen] = useState<boolean>(false);
   const [isUbahLogoOpen, setIsUbahLogoOpen] = useState<boolean>(false);
 
-  // Sync to LocalStorage
+  // Real-time synchronization with Cloud Firestore
+  useEffect(() => {
+    testConnection();
+
+    // Subscribe to real-time reports
+    const unsubLaporan = subscribeToLaporan(
+      (cloudLaporan) => {
+        setLaporanList(cloudLaporan);
+        localStorage.setItem('simon_pjj_laporan_clean', JSON.stringify(cloudLaporan));
+        setIsCloudSyncing(false);
+        setCloudStatus('connected');
+      },
+      () => {
+        setCloudStatus('offline');
+        setIsCloudSyncing(false);
+      }
+    );
+
+    // Subscribe to real-time teachers
+    const unsubGuru = subscribeToGuru(
+      (cloudGuru) => {
+        setDaftarGuru(cloudGuru);
+        localStorage.setItem('simon_pjj_guru_v5', JSON.stringify(cloudGuru));
+      },
+      () => {
+        setCloudStatus('offline');
+      }
+    );
+
+    return () => {
+      unsubLaporan();
+      unsubGuru();
+    };
+  }, []);
+
+  // Sync to LocalStorage as safety backup
   useEffect(() => {
     localStorage.setItem('simon_pjj_guru_v5', JSON.stringify(daftarGuru));
   }, [daftarGuru]);
@@ -82,15 +130,23 @@ export default function App() {
     setProfil((prev) => ({ ...prev, logoUrl: newLogoUrl }));
   };
 
-  const handleAddNewLaporan = (newLaporan: LaporanPJJ) => {
+  const handleAddNewLaporan = async (newLaporan: LaporanPJJ) => {
+    // Optimistic UI update
     setLaporanList((prev) => [newLaporan, ...prev]);
+    // Save to Cloud Database
+    try {
+      await saveLaporanOnline(newLaporan);
+    } catch (err) {
+      console.error('Gagal sinkron laporan ke cloud:', err);
+    }
   };
 
-  const handleUpdatePemeriksaan = (
+  const handleUpdatePemeriksaan = async (
     laporanId: string,
     status: LaporanPJJ['statusPemeriksaan'],
     catatan?: string
   ) => {
+    // Optimistic UI update
     setLaporanList((prev) =>
       prev.map((l) =>
         l.id === laporanId
@@ -103,10 +159,23 @@ export default function App() {
           : l
       )
     );
+    // Sync to Cloud Database
+    try {
+      await updatePemeriksaanOnline(laporanId, status, catatan || '');
+    } catch (err) {
+      console.error('Gagal update pemeriksaan ke cloud:', err);
+    }
   };
 
-  const handleDeleteLaporan = (laporanId: string) => {
+  const handleDeleteLaporan = async (laporanId: string) => {
+    // Optimistic UI update
     setLaporanList((prev) => prev.filter((l) => l.id !== laporanId));
+    // Delete from Cloud Database
+    try {
+      await deleteLaporanOnline(laporanId);
+    } catch (err) {
+      console.error('Gagal menghapus laporan dari cloud:', err);
+    }
   };
 
   const handlePrintLaporanSingle = (laporan: LaporanPJJ) => {
@@ -114,12 +183,26 @@ export default function App() {
     setActiveView('cetak');
   };
 
-  const handleAddGuru = (newGuru: GuruPJJ) => {
+  const handleAddGuru = async (newGuru: GuruPJJ) => {
+    // Optimistic UI update
     setDaftarGuru((prev) => [...prev, newGuru]);
+    // Save to Cloud Database
+    try {
+      await saveGuruOnline(newGuru);
+    } catch (err) {
+      console.error('Gagal menyimpan guru ke cloud:', err);
+    }
   };
 
-  const handleDeleteGuru = (guruId: string) => {
+  const handleDeleteGuru = async (guruId: string) => {
+    // Optimistic UI update
     setDaftarGuru((prev) => prev.filter((g) => g.id !== guruId));
+    // Delete from Cloud Database
+    try {
+      await deleteGuruOnline(guruId);
+    } catch (err) {
+      console.error('Gagal menghapus guru dari cloud:', err);
+    }
   };
 
   const handleClearAllGuru = () => {
@@ -146,6 +229,29 @@ export default function App() {
         totalGuruCount={daftarGuru.length}
         onOpenUbahLogo={() => setIsUbahLogoOpen(true)}
       />
+
+      {/* Cloud Sync Status Banner */}
+      <div className="bg-emerald-50 border-b border-emerald-200/80 px-4 py-1.5 text-xs text-emerald-800">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            <span className="font-semibold text-emerald-900">
+              Cloud Database Aktif
+            </span>
+            <span className="text-emerald-700 hidden md:inline">
+              — Tersinkronisasi otomatis antar semua perangkat (HP Guru & Laptop Kepala Sekolah).
+            </span>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-emerald-700 font-medium text-[11px] bg-emerald-100/70 px-2 py-0.5 rounded-full">
+              {laporanList.length} Laporan Online
+            </span>
+          </div>
+        </div>
+      </div>
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">

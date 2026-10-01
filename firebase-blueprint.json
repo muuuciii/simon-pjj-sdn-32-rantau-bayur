@@ -1,0 +1,86 @@
+{
+  "entities": {
+    "LaporanPJJ": {
+      "title": "Laporan PJJ",
+      "description": "Laporan pelaksanaan pembelajaran jarak jauh oleh guru SDN 32 Rantau Bayur",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "tanggal": { "type": "string" },
+        "guruId": { "type": "string" },
+        "namaGuru": { "type": "string" },
+        "nip": { "type": "string" },
+        "jabatan": { "type": "string" },
+        "mataPelajaran": { "type": "string" },
+        "kelas": { "type": "string" },
+        "jamMulai": { "type": "string" },
+        "jamSelesai": { "type": "string" },
+        "materi": { "type": "string" },
+        "metodePembelajaran": { "type": "string" },
+        "mediaAplikasi": { "type": "string" },
+        "jumlahSiswaTotal": { "type": "number" },
+        "jumlahSiswaHadir": { "type": "number" },
+        "jumlahSiswaTidakHadir": { "type": "number" },
+        "daftarSiswaTidakHadir": { "type": "string" },
+        "kendala": { "type": "string" },
+        "solusi": { "type": "string" },
+        "statusPemeriksaan": {
+          "type": "string",
+          "enum": ["Belum Diperiksa", "Disetujui", "Perlu Perbaikan"]
+        },
+        "catatanKepsek": { "type": "string" },
+        "tanggalDiperiksa": { "type": "string" },
+        "fotoKegiatanUrl": { "type": "string" }
+      },
+      "required": ["tanggal", "namaGuru", "mataPelajaran", "kelas", "materi", "statusPemeriksaan"]
+    },
+    "GuruPJJ": {
+      "title": "Guru PJJ",
+      "description": "Data master dewan guru SDN 32 Rantau Bayur",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "nama": { "type": "string" },
+        "nip": { "type": "string" },
+        "jabatan": { "type": "string" },
+        "mataPelajaran": { "type": "string" },
+        "kelasAjar": { "type": "string" },
+        "nomorHp": { "type": "string" }
+      },
+      "required": ["nama", "jabatan", "mataPelajaran", "kelasAjar"]
+    },
+    "ProfilSekolah": {
+      "title": "Profil Sekolah",
+      "description": "Informasi profil dan pengaturan SDN 32 Rantau Bayur",
+      "type": "object",
+      "properties": {
+        "nama": { "type": "string" },
+        "npsn": { "type": "string" },
+        "tahunAjaran": { "type": "string" },
+        "semester": { "type": "string" },
+        "kepalaSekolah": { "type": "string" },
+        "nipKepalaSekolah": { "type": "string" },
+        "alamat": { "type": "string" },
+        "kabupaten": { "type": "string" },
+        "provinsi": { "type": "string" },
+        "logoUrl": { "type": "string" },
+        "fotoSekolah": { "type": "string" }
+      },
+      "required": ["nama", "kepalaSekolah", "alamat"]
+    }
+  },
+  "firestore": {
+    "/laporan_pjj/{laporanId}": {
+      "schema": "LaporanPJJ",
+      "description": "Koleksi data laporan harian pelaksanaan PJJ antar perangkat"
+    },
+    "/guru_pjj/{guruId}": {
+      "schema": "GuruPJJ",
+      "description": "Koleksi data dewan guru antar perangkat"
+    },
+    "/profil_sekolah/{docId}": {
+      "schema": "ProfilSekolah",
+      "description": "Konfigurasi profil sekolah SDN 32 Rantau Bayur"
+    }
+  }
+}
